@@ -1,33 +1,127 @@
 package com.example.application.views.list;
 
-import com.vaadin.flow.component.html.H2;
-import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.html.Paragraph;
+import com.example.application.data.AssociationRule;
+import com.example.application.data.FrequentItem;
+import com.example.application.services.AprioriAlgorithm;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
 
-@PageTitle("list")
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+@PageTitle("Apiriori algorithm")
 @Route(value = "")
 public class ListView extends VerticalLayout {
-
+    Grid<FrequentItem> frequentItemsGrid = new Grid<>(FrequentItem.class);
+    Grid<AssociationRule> associationRulesGrid = new Grid<>(AssociationRule.class);
+    AprioriAlgorithm apriori = new AprioriAlgorithm();
     public ListView() {
-        setSpacing(false);
-
-        Image img = new Image("images/empty-plant.png", "placeholder plant");
-        img.setWidth("200px");
-        add(img);
-
-        H2 header = new H2("This place intentionally left empty");
-        header.addClassNames(Margin.Top.XLARGE, Margin.Bottom.MEDIUM);
-        add(header);
-        add(new Paragraph("It’s a place where you can grow your own UI 🤗"));
-
+        addClassName("list-view");
         setSizeFull();
-        setJustifyContentMode(JustifyContentMode.CENTER);
-        setDefaultHorizontalComponentAlignment(Alignment.CENTER);
-        getStyle().set("text-align", "center");
+
+        initConfigurations();
+        configureGrid();
+
+        HorizontalLayout inputLayout = new HorizontalLayout();
+        NumberField minSupportInput = new NumberField("Min Support");
+        NumberField minConfidenceInput = new NumberField("Min Confidence");
+        Div Suffix = new Div();
+        Suffix.setText("%");
+        Div Suffix2 = new Div();
+        Suffix2.setText("%");
+
+        minSupportInput.setSuffixComponent(Suffix);
+        minSupportInput.setMin(0);
+        minSupportInput.setMax(100);
+        minSupportInput.setValue(1.0);
+
+        minConfidenceInput.setSuffixComponent(Suffix2);
+        minConfidenceInput.setMin(0);
+        minConfidenceInput.setMax(100);
+        minConfidenceInput.setValue(10.0);
+
+        Button generateButton = new Button("Generate", event -> {
+            List<FrequentItem> frequentItems = new ArrayList<>();
+            List<AssociationRule> associationRules = new ArrayList<>();
+            Map<Set<String>, Integer> frequentItemsets = apriori.apriori(minSupportInput.getValue()/100);
+            frequentItemsets.forEach((key, value) -> {
+                if(key.size() == 1) return;
+                FrequentItem frequentItem = new FrequentItem();
+                frequentItem.setItemset(key);
+                frequentItem.setSupportCount(value);
+                frequentItems.add(frequentItem);
+            });
+            // sort the frequent items by support count then the length of the itemset in descending order
+            frequentItems.sort((f1, f2) -> f2.getSupportCount() - f1.getSupportCount());
+            frequentItems.sort((f1, f2) -> f2.getItemset().size() - f1.getItemset().size());
+
+            frequentItemsGrid.setItems(frequentItems);
+            associationRules = apriori.generateAssociationRules(frequentItemsets, minConfidenceInput.getValue()/100);
+            // sort the association rules by confidence in descending order
+            associationRules.sort((a1, a2) -> Double.compare(a2.getConfidence(), a1.getConfidence()));
+            associationRules.sort((a1, a2) -> a2.getSubset().size() - a1.getSubset().size());
+            associationRules.sort((a1, a2) -> a1.getRemaining().size() - a2.getRemaining().size());
+            associationRulesGrid.setItems(associationRules);
+
+        });
+
+        inputLayout.add(
+                minSupportInput,
+                minConfidenceInput,
+                generateButton
+        );
+        inputLayout.setAlignItems(Alignment.BASELINE);
+
+        add(inputLayout);
+
+        Div gridLayout = new Div();
+        gridLayout.add(frequentItemsGrid, associationRulesGrid);
+        setGridStyles(frequentItemsGrid);
+        setGridStyles(associationRulesGrid);
+        setContainerStyles(gridLayout);
+        add(gridLayout);
+    }
+    private static void setGridStyles(Grid grid) {
+        grid.setHeightFull();
+        grid.getStyle()
+//                .set("width", "300px")
+//                .set("height", "550px")
+                .set("margin-left", "1rem")
+                .set("margin-right", "1rem")
+                .set("align-self", "unset");
+    }
+
+    private static void setContainerStyles(Div container) {
+        container.setWidthFull();
+        container.setHeightFull();
+        container.getStyle().set("display", "flex").set("flex-direction", "row")
+                .set("flex-wrap", "wrap");
+    }
+    private void initConfigurations() {
+        apriori.readTransactionsFromFile("E:\\FCAI\\4th Grade\\2nd\\BigData\\Apiriori_algorithm\\src\\Bakery.csv");
+        apriori.printTransactionsInfo();
+    }
+    private void configureGrid() {
+        frequentItemsGrid.addClassName("frequent-items-grid");
+        frequentItemsGrid.setSizeUndefined();
+        frequentItemsGrid.setColumns("itemset", "supportCount");
+        frequentItemsGrid.getColumns().forEach(col -> col.setAutoWidth(true));
+//        frequentItemsGrid.sort(GridSortOrder.desc(frequentItemsGrid.getColumnByKey("supportCount")).build());
+
+        associationRulesGrid.addClassName("association-rules-grid");
+        associationRulesGrid.setSizeUndefined();
+        associationRulesGrid.setColumns("subset", "remaining", "confidence");
+        associationRulesGrid.getColumns().forEach(col -> col.setAutoWidth(true));
+        // the grid is sorted by confidence in descending order
+//        associationRulesGrid.sort(GridSortOrder.desc(associationRulesGrid.getColumnByKey("confidence")).build());
     }
 
 }
