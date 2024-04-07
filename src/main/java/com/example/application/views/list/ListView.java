@@ -4,10 +4,10 @@ import com.example.application.data.AssociationRule;
 import com.example.application.data.FrequentItem;
 import com.example.application.services.AprioriAlgorithm;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
@@ -51,6 +51,18 @@ public class ListView extends VerticalLayout {
         minConfidenceInput.setValue(10.0);
 
         Button generateButton = new Button("Generate", event -> {
+            if (minSupportInput.isEmpty() || minConfidenceInput.isEmpty()) {
+                Notification.show("Please enter the minimum support and confidence values").setThemeName("error");
+                return;
+            }
+            if (minSupportInput.getValue() < 0 || minSupportInput.getValue() > 100) {
+                Notification.show("Please enter a valid minimum support value").setThemeName("error");
+                return;
+            }
+            if (minConfidenceInput.getValue() < 0 || minConfidenceInput.getValue() > 100) {
+                Notification.show("Please enter a valid minimum confidence value").setThemeName("error");
+                return;
+            }
             List<FrequentItem> frequentItems = new ArrayList<>();
             List<AssociationRule> associationRules = new ArrayList<>();
             Map<Set<String>, Integer> frequentItemsets = apriori.apriori(minSupportInput.getValue()/100);
