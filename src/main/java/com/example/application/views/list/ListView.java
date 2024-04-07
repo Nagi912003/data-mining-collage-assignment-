@@ -4,7 +4,9 @@ import com.example.application.data.AssociationRule;
 import com.example.application.data.FrequentItem;
 import com.example.application.services.AprioriAlgorithm;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -72,12 +74,15 @@ public class ListView extends VerticalLayout {
             associationRulesGrid.setItems(associationRules);
 
         });
+        minSupportInput.getStyle().set("margin-left", "1rem");
 
         inputLayout.add(
                 minSupportInput,
                 minConfidenceInput,
                 generateButton
         );
+        // Apply layout alignment
+        inputLayout.setSpacing(true);
         inputLayout.setAlignItems(Alignment.BASELINE);
 
         add(inputLayout);
@@ -122,6 +127,8 @@ public class ListView extends VerticalLayout {
         associationRulesGrid.getColumns().forEach(col -> col.setAutoWidth(true));
         // the grid is sorted by confidence in descending order
 //        associationRulesGrid.sort(GridSortOrder.desc(associationRulesGrid.getColumnByKey("confidence")).build());
+        frequentItemsGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
+        associationRulesGrid.addThemeVariants(GridVariant.LUMO_ROW_STRIPES);
     }
 
 }
