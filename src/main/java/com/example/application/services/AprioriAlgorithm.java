@@ -22,11 +22,28 @@ public class AprioriAlgorithm {
         System.out.println("Items With Count Greater Than "+supportCount+": " + transactions.getItemsWithCountGreaterThan(supportCount));
     }
 
-    public void readTransactionsFromFile(String filename) {
+    public void readTransactionsFromFile(String filename, double percentage) {
+        if(percentage > 100 || percentage < 0)
+            percentage = 0;
+        transactions.clear();
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String line;
+            List<String> lines = new ArrayList<>();
             while ((line = br.readLine()) != null) {
-                String[] parts = line.split(",");
+                lines.add(line);
+            }
+            // Calculate the number of records to read based on the specified percentage
+            int numRecords = (int) Math.ceil(lines.size() * percentage / 100.0);
+            Random rand = new Random();
+            Set<Integer> indices = new HashSet<>();
+            while (indices.size() < numRecords) {
+                indices.add(rand.nextInt(lines.size()));
+//                System.out.println("indices size: "+indices.size());
+            }
+//            System.out.println("indices size: "+indices.size());
+
+            for (int index : indices) {
+                String[] parts = lines.get(index).split(",");
                 int transactionNo = Integer.parseInt(parts[0].trim());
                 String items = parts[1].trim();
                 String dateTime = parts[2].trim();
@@ -126,7 +143,8 @@ public class AprioriAlgorithm {
                     count++;
                 }
             }
-            double support = (double) count / transactions.transactions.size();
+//            double support = (double) count / transactions.transactions.size();
+            double support = count;
             if (support >= minSupport) {
                 frequentItemsets.put(itemset, count);
             }
@@ -186,7 +204,7 @@ public class AprioriAlgorithm {
 
     public static void main(String[] args) {
         AprioriAlgorithm apriori = new AprioriAlgorithm();
-        apriori.readTransactionsFromFile("E:\\FCAI\\4th Grade\\2nd\\BigData\\Apiriori_algorithm\\src\\Bakery.csv");
+        apriori.readTransactionsFromFile("E:\\FCAI\\4th Grade\\2nd\\BigData\\Apiriori_algorithm\\src\\Bakery.csv", 70);
         apriori.printTransactionsInfo();
 
         Map<Set<String>, Integer> frequentItemsets = apriori.apriori(0.05); // Minimum support = 0.005

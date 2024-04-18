@@ -43,4 +43,10 @@ public class Transactions {
         }
         return itemsCountGreaterThan;
     }
+
+    public void clear(){
+        transactions.clear();
+        itemsCount.clear();
+        transactionsItems.clear();
+    }
 }

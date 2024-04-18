@@ -29,33 +29,48 @@ public class ListView extends VerticalLayout {
         addClassName("list-view");
         setSizeFull();
 
-        initConfigurations();
+//        initConfigurations();
         configureGrid();
 
         HorizontalLayout inputLayout = new HorizontalLayout();
-        NumberField minSupportInput = new NumberField("Min Support");
+        NumberField minSupportInput = new NumberField("Min Support Count");
         NumberField minConfidenceInput = new NumberField("Min Confidence");
-        Div Suffix = new Div();
-        Suffix.setText("%");
+        NumberField InputFilePercentage = new NumberField("Percentage");
+//        Div Suffix = new Div();
+//        Suffix.setText("%");
         Div Suffix2 = new Div();
         Suffix2.setText("%");
+        Div Suffix3 = new Div();
+        Suffix3.setText("%");
 
-        minSupportInput.setSuffixComponent(Suffix);
+//        minSupportInput.setSuffixComponent(Suffix);
         minSupportInput.setMin(0);
-        minSupportInput.setMax(100);
-        minSupportInput.setValue(1.0);
+//        minSupportInput.setMax(100);
+        minSupportInput.setValue(100.0);
 
         minConfidenceInput.setSuffixComponent(Suffix2);
         minConfidenceInput.setMin(0);
         minConfidenceInput.setMax(100);
         minConfidenceInput.setValue(10.0);
 
+        InputFilePercentage.setSuffixComponent(Suffix3);
+        InputFilePercentage.setMin(0);
+        InputFilePercentage.setMax(100);
+        InputFilePercentage.setValue(70.0);
+
         Button generateButton = new Button("Generate", event -> {
+            if(InputFilePercentage.isEmpty()){
+                InputFilePercentage.setValue(100.0);
+            }
+            if (InputFilePercentage.getValue() <= 0 || InputFilePercentage.getValue() > 100) {
+                Notification.show("Please enter a valid Input File Percentage value").setThemeName("error");
+                return;
+            }
             if (minSupportInput.isEmpty() || minConfidenceInput.isEmpty()) {
                 Notification.show("Please enter the minimum support and confidence values").setThemeName("error");
                 return;
             }
-            if (minSupportInput.getValue() < 0 || minSupportInput.getValue() > 100) {
+            if (minSupportInput.getValue() < 0) {
                 Notification.show("Please enter a valid minimum support value").setThemeName("error");
                 return;
             }
@@ -65,7 +80,9 @@ public class ListView extends VerticalLayout {
             }
             List<FrequentItem> frequentItems = new ArrayList<>();
             List<AssociationRule> associationRules = new ArrayList<>();
-            Map<Set<String>, Integer> frequentItemsets = apriori.apriori(minSupportInput.getValue()/100);
+            apriori.readTransactionsFromFile("E:\\FCAI\\4th Grade\\2nd\\BigData\\Apiriori_algorithm\\src\\Bakery.csv", InputFilePercentage.getValue());
+            apriori.printTransactionsInfo();
+            Map<Set<String>, Integer> frequentItemsets = apriori.apriori(minSupportInput.getValue());
             frequentItemsets.forEach((key, value) -> {
                 if(key.size() == 1) return;
                 FrequentItem frequentItem = new FrequentItem();
@@ -89,6 +106,7 @@ public class ListView extends VerticalLayout {
         minSupportInput.getStyle().set("margin-left", "1rem");
 
         inputLayout.add(
+                InputFilePercentage,
                 minSupportInput,
                 minConfidenceInput,
                 generateButton
@@ -122,10 +140,10 @@ public class ListView extends VerticalLayout {
         container.getStyle().set("display", "flex").set("flex-direction", "row")
                 .set("flex-wrap", "wrap");
     }
-    private void initConfigurations() {
-        apriori.readTransactionsFromFile("E:\\FCAI\\4th Grade\\2nd\\BigData\\Apiriori_algorithm\\src\\Bakery.csv");
-        apriori.printTransactionsInfo();
-    }
+//    private void initConfigurations() {
+////        apriori.readTransactionsFromFile("E:\\FCAI\\4th Grade\\2nd\\BigData\\Apiriori_algorithm\\src\\Bakery.csv");
+////        apriori.printTransactionsInfo();
+//    }
     private void configureGrid() {
         frequentItemsGrid.addClassName("frequent-items-grid");
         frequentItemsGrid.setSizeUndefined();
